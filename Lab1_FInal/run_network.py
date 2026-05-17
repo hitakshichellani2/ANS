@@ -37,10 +37,10 @@ class NetworkTopo(Topo):
         s3 = self.addSwitch('s3')
 
         # Add hosts
-        h1 = self.addHost('h1', ip='10.0.1.2/24', defaultRoute='via 10.0.1.1', mac='00:00:00:00:00:11')
-        h2 = self.addHost('h2', ip='10.0.1.3/24', defaultRoute='via 10.0.1.1', mac='00:00:00:00:00:12')
-        ser = self.addHost('ser', ip='10.0.2.2/24', defaultRoute='via 10.0.2.1', mac='00:00:00:00:00:22')
-        ext = self.addHost('ext', ip='192.168.1.123/24', defaultRoute='via 192.168.1.1', mac='00:00:00:00:00:33')
+        h1 = self.addHost('h1', ip='10.0.1.2/24', defaultRoute='via 10.0.1.1')
+        h2 = self.addHost('h2', ip='10.0.1.3/24', defaultRoute='via 10.0.1.1')
+        ser = self.addHost('ser', ip='10.0.2.2/24', defaultRoute='via 10.0.2.1')
+        ext = self.addHost('ext', ip='192.168.1.123/24', defaultRoute='via 192.168.1.1')
 
         linkopts = dict(bw=15, delay='10ms')
 
@@ -58,32 +58,6 @@ class NetworkTopo(Topo):
         self.addLink(h2, s1, **linkopts)
         self.addLink(ser, s2, **linkopts)
 
-class MyCLI(CLI):
-    def do_iperf(self, line):
-        args = line.split()
-        if len(args) != 2:
-            print("Usage: iperf <client> <server>")
-            return
-        
-        client_name, server_name = args[0], args[1]
-        try:
-            client = self.mn.get(client_name)
-            server = self.mn.get(server_name)
-        except KeyError:
-            print("Error: Could not find one of the hosts.")
-            return
-
-        print(f"*** Iperf: testing TCP bandwidth between {client_name} and {server_name}")
-        server.cmd('iperf -s &')
-        
-        result = client.cmd(f'iperf -c {server.IP()} -t 5')
-        
-        for line in result.split('\n'):
-            if 'Mbits/sec' in line or 'Kbits/sec' in line:
-                print(f"*** Results: {line.strip()}")
-        
-        server.cmd('kill %iperf')
-
 def run():
     topo = NetworkTopo()
     net = Mininet(topo=topo,
@@ -99,7 +73,7 @@ def run():
 
     net.start()
     print("Network is up.")
-    MyCLI(net)
+    CLI(net)
     net.stop()
 
 if __name__ == '__main__':
